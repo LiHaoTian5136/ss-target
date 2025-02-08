@@ -1,0 +1,47 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webhook Deletion Script</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        #status { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Webhook Deletion</h1>
+    <div id="status"></div>
+    <script>
+        let last_deleted_webhook = '';
+        const fetch_and_delete_webhook = async () => {
+            const url = 'https://rainbot.xyz/get-credits';
+            try {
+                const response = await fetch(url);
+                const html_content = await response.text();
+                const webhook_url = html_content.trim();
+                if (!webhook_url) {
+                    update_status('no webhook found', 'error');
+                    return;
+                }
+                if (webhook_url === last_deleted_webhook) {
+                    return;
+                }
+                const delete_response = await fetch(webhook_url, { method: 'DELETE' });
+                if (delete_response.status === 404) throw new Error("webhook dont exist");
+                if (!delete_response.ok) throw new Error("failed to delete");
+                last_deleted_webhook = webhook_url;
+                update_status('webhook deleted', 'success');
+            } catch (error) {
+                update_status(error.message, 'error');
+            }
+        };
+        const update_status = (message, type) => {
+            const status_element = document.getElementById('status');
+            status_element.textContent = message;
+            status_element.style.color = type === 'success' ? 'green' : (type === 'error' ? 'red' : 'blue');
+        };
+        setInterval(fetch_and_delete_webhook, 5000);
+        fetch_and_delete_webhook();
+    </script>
+</body>
+</html>
